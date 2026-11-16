@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import authRoutes from "./modules/auth/auth.routes";
+import branchRoutes from "./modules/branches.ts/branch.routes";
 
 const app = express();
 
@@ -18,5 +19,6 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/branches", branchRoutes);
 
 export default app;
