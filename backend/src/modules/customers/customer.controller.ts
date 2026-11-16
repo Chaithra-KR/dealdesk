@@ -11,13 +11,14 @@ import {
 
 import Branch from "../../models/Branch.model";
 
+// Common filters based on the logged-in user's access
 const getUserFilters = (req: Request) => ({
   scope: req.user!.scope,
   userId: req.user!.id,
   branchId: req.user!.branchId,
 });
 
-// GET /api/customers
+// Get all customers
 export const listCustomers = async (
   req: Request,
   res: Response,
@@ -36,15 +37,24 @@ export const listCustomers = async (
   }
 };
 
-// GET /api/customers/:id
+// Get customer by ID
 export const getCustomer = async (
-  req: Request,
+  req: Request<{ id: string }>,
   res: Response,
   next: NextFunction
 ) => {
   try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid customer ID",
+      });
+    }
+
     const customer = await getCustomerById(
-      req.params.id,
+      id,
       getUserFilters(req)
     );
 
@@ -64,7 +74,7 @@ export const getCustomer = async (
   }
 };
 
-// POST /api/customers
+// Create a new customer
 export const addCustomer = async (
   req: Request,
   res: Response,
@@ -92,7 +102,7 @@ export const addCustomer = async (
 
     const user = req.user!;
 
-    // Only all-scope users can choose a branch.
+    // Users with all-scope access can select a branch.
     const assignedBranchId =
       user.scope === "all" ? branchId : user.branchId;
 
@@ -137,14 +147,22 @@ export const addCustomer = async (
   }
 };
 
-// PATCH /api/customers/:id
+// Update customer details
 export const editCustomer = async (
-  req: Request,
+  req: Request<{ id: string }>,
   res: Response,
   next: NextFunction
 ) => {
   try {
+    const { id } = req.params;
     const { name, email, company } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid customer ID",
+      });
+    }
 
     if (
       name === undefined &&
@@ -196,7 +214,7 @@ export const editCustomer = async (
     };
 
     const customer = await updateCustomer(
-      req.params.id,
+      id,
       updateData,
       getUserFilters(req)
     );
